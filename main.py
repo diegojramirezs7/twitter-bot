@@ -1,11 +1,8 @@
 import tweepy
-import datetime
 import random
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 import requests
-import binascii
-import io
 from constants import *
 import contentHandler
 from bs4 import BeautifulSoup
@@ -111,17 +108,24 @@ class TwitterBot:
 			# build tweet content
 			tweet = "{0}\nnews of the day: {1}".format(subtopic, new_link)
 			api.update_status(tweet)
+			browser.close()
 		except Exception as e:
 			print(str(e))
 			return str(e)
 
 
-	def retweet(topic):
-		pass
+	def retweet(self, topic):
+		try:
+			subtopic = random.choice(self.subtopics[topic])
+			tweets = api.search(q=subtopic, lang='en', rpp=20)
+			tweet = random.choice(tweets)
+			tweet.retweet()
+		except Exception as e:
+			return str(e)
 
 
 if __name__ == '__main__':
 	tb = TwitterBot()
-	tb.tweet_news('poetry')
+	tb.tweet()
 
 
