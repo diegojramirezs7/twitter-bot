@@ -5,7 +5,6 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 import requests
 from PIL import Image
-from PIL import ImageDraw
 import binascii
 import io
 from secret_constants import *
@@ -15,8 +14,7 @@ import json
 from string import digits
 import re
 
-
-DRIVER_PATH = "/Users/diego_ramirezs/Documents/tbot/chromedriver"
+DRIVER_PATH = ""
 MAX_LENGTH = 280
 
 
@@ -43,7 +41,7 @@ def poetryfoundation(endpoint):
 			tweet_text = "{0}\n{1}\n{2}".format(poem_text[:cut_index], author, info)
 		
 		api.update_status(tweet_text)
-
+		browser.close()
 	except Exception as e:
 		return str(e)
 
@@ -79,7 +77,7 @@ def poetryloc(endpoint):
 			tweet_text = "{0}\n{1}\n{2}".format(tweet_text[:cut_index], author, info)
 		
 		api.update_status(tweet_text)
-		
+		browser.close()
 	except Exception as e:
 		return str(e)
 
@@ -103,6 +101,7 @@ def boredpanda(endpoint):
 			joke_choice = joke_choice[:MAX_LENGTH]
 
 		api.update_status(joke_choice)
+		browser.close()
 	except Exception as e:
 		return str(e)	
 
@@ -124,6 +123,7 @@ def countryliving(endpoint):
 			joke_choice = joke_choice[:MAX_LENGTH]
 
 		api.update_status(joke_choice)
+		browser.close()
 	except Exception as e:
 		return str(e)
 
@@ -158,7 +158,6 @@ def unsplash(endpoint):
 
 		media = api.media_upload(image_name)
 		api.update_status(status=description, media_ids=[media.media_id])
-		
 	except Exception as e:
 		return str(e)
 
@@ -192,7 +191,6 @@ def metmuseum(endpoint):
 		else:
 			tweet_text = "title: {0}\ndepartment: {1}\ndate: {2}\nImage not available".format(title, department, date)
 			api.update_status(status=tweet_text)
-		
 	except Exception as e:
 		return str(e)
 
@@ -225,7 +223,7 @@ def everydaypower(endpoint):
 			quote = quote[:275] + "..."
 
 		api.update_status(quote)
-
+		browser.close()
 	except Exception as e:
 		print(str(e))
 		return str(e)
@@ -247,6 +245,7 @@ def brainyquote(endpoint):
 		quote = random.choice(quote_list)
 
 		api.update_status(quote)
+		browser.close()
 	except Exception as e:
 		return str(e)
 
@@ -273,7 +272,7 @@ def letsgetsciencey(endpoint):
 			fact = "{0}...\n{1}".format(fact, info)
 
 		api.update_status(fact)
-
+		browser.close()
 	except Exception as e:
 		print(str(e))
 		return str(e)
@@ -328,7 +327,7 @@ def thefactsite(endpoint):
 			fact = fact[:275] + "..."
 
 		api.update_status(fact)
-
+		browser.close()
 	except Exception as e:
 		return str(e)
 
@@ -347,5 +346,6 @@ def orleansmarketing(endpoint):
 		fact = random.choice(fact_list)
 
 		api.update_status(fact)
+		browser.close()
 	except Exception as e:
 		return str(e)
