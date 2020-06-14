@@ -7,7 +7,7 @@ import requests
 from PIL import Image
 import binascii
 import io
-from secret_constants import *
+from constants import *
 import contentHandler
 from bs4 import BeautifulSoup
 import json
