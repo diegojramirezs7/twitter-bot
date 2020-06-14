@@ -7,14 +7,14 @@ import requests
 from PIL import Image
 import binascii
 import io
-from constants import *
+from secret_constants import *
 import contentHandler
 from bs4 import BeautifulSoup
 import json
 from string import digits
 import re
 
-DRIVER_PATH = "/Users/diego_ramirezs/Documents/tbot/chromedriver"
+DRIVER_PATH = ""
 MAX_LENGTH = 280
 
 
