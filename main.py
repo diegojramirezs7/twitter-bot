@@ -4,12 +4,11 @@ import random
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 import requests
-from PIL import Image
-from PIL import ImageDraw
 import binascii
 import io
 from constants import *
 import contentHandler
+from bs4 import BeautifulSoup
 
 auth_handler = tweepy.OAuthHandler(API_KEY, SEC_KEY)
 auth_handler.set_access_token(TOKEN, SEC_TOKEN)
@@ -28,13 +27,11 @@ class TwitterBot:
 				{"countryliving": "https://www.countryliving.com/life/a27452412/best-dad-jokes/"}
 			],
 			'art': [
-				# author and picture name are attributed in the json response for both
 				{"unsplash": "https://api.unsplash.com/photos/random?client_id=uiBKriuL0je85mzrm-aEJr29zagN3P9dzHfgat62ABQ"},
 				{"metmuseum": "https://collectionapi.metmuseum.org/public/collection/v1/objects/71"}
 			],
 			'sports': [
 				{"everydaypower": "https://everydaypower.com/motivational-sports-quotes/"},
-				# class clearfix
 				{"brainyquote": "https://www.brainyquote.com/topics/sports-quotes"}
 			],
 			'science': [
@@ -48,13 +45,12 @@ class TwitterBot:
 			]
 		}
 		self.subtopics = {
-			'poetry': [],
-			'comedy': [],
-			'art': [],
-			'sports': [],
-			'entertainment': [],
-			'science': [],
-			'technology': []	
+			'poetry': ["depression poetry", "laughter poetry", "poetry about future", "romantic poetry", "poetry about sympathy"],
+			'comedy': ["insult comedy", "cringe comedy", "blue comedy", "prop comedy", "shock humor"],
+			'art': ["Aestheticism", "Baroque", "Cubism", "Feminist art", "Street Art"],
+			'sports': ["soccer", "basketball", "UFC", "baseball", "NFL"],
+			'science': ["physics", "chemistry", "biology", "psychology", "economics"],
+			'technology': ["artificial intelligence", "nano technology", "space exploration", "robotics", "health and medicine"]	
 		}
 
 		self.driver_path = ""
@@ -85,7 +81,39 @@ class TwitterBot:
 
 
 	def tweet_news(self, topic):
-		pass
+		try:
+			opts = Options()
+			opts.headless = True
+			browser = Chrome(executable_path=self.driver_path, options = opts)
+			
+			#build appropriate url with search params
+			subtopic = random.choice(self.subtopics[topic])
+			endpoint = "https://news.google.com/search?q="
+			params = subtopic.replace(' ','+')
+			endpoint += params
+
+			#get webpage source
+			browser.get(endpoint)
+			soup = BeautifulSoup(browser.page_source, 'html.parser')
+			
+			#get list of links from result page
+			link_list = soup.find_all('a', attrs={'class': 'VDXfz'})
+			links = [x.get('href')[1:] for x in link_list]
+			
+			# links are relative to its path, so they need to be made absolute
+			choice = random.choice(links)
+			link = "https://news.google.com"+choice
+			
+			# link obtained redirects to third link, so we get the link that request redirects to
+			browser.get(link)
+			new_link = browser.current_url
+			
+			# build tweet content
+			tweet = "{0}\nnews of the day: {1}".format(subtopic, new_link)
+			api.update_status(tweet)
+		except Exception as e:
+			print(str(e))
+			return str(e)
 
 
 	def retweet(topic):
@@ -94,5 +122,6 @@ class TwitterBot:
 
 if __name__ == '__main__':
 	tb = TwitterBot()
+	tb.tweet_news('poetry')
 
 
