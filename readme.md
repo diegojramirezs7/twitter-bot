@@ -7,6 +7,9 @@ The program gets the content from different websites and APIs.
 - The content from APIs is obtained with Python's requests library. 
 - The twitter API is used through the API wrapper Tweepy. 
 
+- Bot still needs a couple of small features to be implemented
+- Right now, it can successfully creates new content 
+
 
 
 
