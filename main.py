@@ -13,10 +13,10 @@ api = tweepy.API(auth_handler)
 
 class TwitterBot:
 	def __init__(self):
-		self.topics = ['poetry', 'comedy', 'art', 'sports', 'entertainment', 'science', 'technology']
+		self.topics = ['poetry', 'comedy', 'art', 'sports', 'science', 'technology']
 		self.content_resources = {
 			'poetry': [
-				{"poetryfoundation": "https://www.poetryfoundation.org/poems/poem-of-the-day"},
+				{"poetrydb": "http://poetrydb.org/random"},
 				{"poetryloc": "http://www.loc.gov/poetry/180/p180-list.html"}
 			],
 			'comedy': [
@@ -50,8 +50,6 @@ class TwitterBot:
 			'technology': ["artificial intelligence", "nano technology", "space exploration", "robotics", "health and medicine"]	
 		}
 
-		self.driver_path = ""
-
 
 	def tweet(self):
 		topic = random.choice(self.topics)
@@ -69,7 +67,8 @@ class TwitterBot:
 
 	def tweet_content(self, topic):
 		#choose between the 2 resources
-		choice = random.choice(self.content_resources[topic])
+		#choice = random.choice(self.content_resources[topic])
+		choice = {"poetrydb": "http://poetrydb.org/random"}
 		#get resource key as string
 		resource = [x for x in choice][0]
 		endpoint = choice[resource]
@@ -79,10 +78,6 @@ class TwitterBot:
 
 	def tweet_news(self, topic):
 		try:
-			opts = Options()
-			opts.headless = True
-			browser = Chrome(executable_path=self.driver_path, options = opts)
-			
 			#build appropriate url with search params
 			subtopic = random.choice(self.subtopics[topic])
 			endpoint = "https://news.google.com/search?q="
@@ -90,25 +85,24 @@ class TwitterBot:
 			endpoint += params
 
 			#get webpage source
-			browser.get(endpoint)
-			soup = BeautifulSoup(browser.page_source, 'html.parser')
-			
+			resp = requests.get(endpoint)
+			soup = BeautifulSoup(resp.content, 'html.parser')
+
 			#get list of links from result page
 			link_list = soup.find_all('a', attrs={'class': 'VDXfz'})
 			links = [x.get('href')[1:] for x in link_list]
-			
+
 			# links are relative to its path, so they need to be made absolute
 			choice = random.choice(links)
 			link = "https://news.google.com"+choice
-			
+
 			# link obtained redirects to third link, so we get the link that request redirects to
-			browser.get(link)
-			new_link = browser.current_url
-			
+			article = requests.get(link)
+			new_link = article.url
+
 			# build tweet content
 			tweet = "{0}\nnews of the day: {1}".format(subtopic, new_link)
 			api.update_status(tweet)
-			browser.close()
 		except Exception as e:
 			print(str(e))
 			return str(e)
@@ -121,11 +115,11 @@ class TwitterBot:
 			tweet = random.choice(tweets)
 			tweet.retweet()
 		except Exception as e:
+			print(str(e))
 			return str(e)
 
 
 if __name__ == '__main__':
 	tb = TwitterBot()
 	tb.tweet()
-
 
