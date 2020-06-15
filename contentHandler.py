@@ -1,72 +1,62 @@
 import tweepy
-import datetime
 import random
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
 import requests
 from PIL import Image
 import binascii
 import io
-from constants import *
-import contentHandler
+from secret_constants import *
 from bs4 import BeautifulSoup
 import json
 from string import digits
 import re
 
-DRIVER_PATH = ""
 MAX_LENGTH = 280
-
 
 auth_handler = tweepy.OAuthHandler(API_KEY, SEC_KEY)
 auth_handler.set_access_token(TOKEN, SEC_TOKEN)
 api = tweepy.API(auth_handler)
 
 
-def poetryfoundation(endpoint):
+def poetrydb(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
+		# get random poem from api
+		resp = requests.get(endpoint)
+		poem = json.loads(resp.content)
 		
-		# get texts from the website
-		poem_text = browser.find_elements_by_class_name('o-poem')[0].text
-		author = browser.find_elements_by_class_name("c-txt_attribution")[0].text
-		tweet_text = "{0}\n{1}".format(poem_text, author)
-
-		if len(tweet_text) > MAX_LENGTH:
-			info = "Full poem: {0}".format(endpoint)
-			cut_index = MAX_LENGTH - len(author) - len(info) - 3
-			tweet_text = "{0}\n{1}\n{2}".format(poem_text[:cut_index], author, info)
+		# get indiv fields
+		title = poem.get('title')
+		author = poem.get('author')
+		text = "\n".join(poem.get('lines'))
+		
+		# prepare tweet text and adjust length
+		addons = 8
+		cut_index = MAX_LENGTH - len(author) - len(title) - addons
+		tt = text[:cut_index]
+		tweet_text = "{0}\n{1}...\nby {2}".format(title, tt, author)
 		
 		api.update_status(tweet_text)
-		browser.close()
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
 def poetryloc(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
-		
-		# get list of all poem links 
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		# get list of all poem links
+		resp = requests.get(endpoint)
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		anchor_list = soup.find('table').find_all('a')
 		html_list = [item.get('href') for item in anchor_list]
-		
+
 		# create url of specific poem by adding the random choice of poem link
 		html_choice = random.choice(html_list)
 		poem_url = "http://www.loc.gov/poetry/180/{0}".format(html_choice)
-		
-		#scrape poem once we have specific link
-		browser.get(poem_url)
-		content = browser.find_element_by_class_name("section_intro").text
-		
-		#remove poem title, which is the first line always
+
+		poem_page = requests.get(poem_url)
+		soup = BeautifulSoup(poem_page.content, 'html.parser')
+		content = soup.find('div', attrs={'class': 'section_intro'}).text
+
+		# remove poem title, which is always the first line
 		tweet_text = content[content.index('\n'):]
 
 		if len(tweet_text) > MAX_LENGTH:
@@ -75,24 +65,21 @@ def poetryloc(endpoint):
 			info = "Full poem: {0}".format(poem_url)
 			cut_index = MAX_LENGTH - len(author) - len(info) - 3
 			tweet_text = "{0}\n{1}\n{2}".format(tweet_text[:cut_index], author, info)
-		
+
 		api.update_status(tweet_text)
-		browser.close()
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
 def boredpanda(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
+		resp = requests.get(endpoint)
 		
 		# find all joke containers
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		joke_list = soup.find_all('span', attrs={'class': 'bordered-description'})
-		
+
 		# select a random joke out of the list
 		joke_choice = random.choice(joke_list)
 		joke_choice = joke_choice.text
@@ -101,19 +88,16 @@ def boredpanda(endpoint):
 			joke_choice = joke_choice[:MAX_LENGTH]
 
 		api.update_status(joke_choice)
-		browser.close()
 	except Exception as e:
+		print(str(e))
 		return str(e)	
 
 
 def countryliving(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
+		resp = requests.get(endpoint)
 
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		joke_list = soup.find('div', attrs={'class': 'article-body-content'}).find_all('li')
 
 		joke_choice = random.choice(joke_list)
@@ -123,8 +107,8 @@ def countryliving(endpoint):
 			joke_choice = joke_choice[:MAX_LENGTH]
 
 		api.update_status(joke_choice)
-		browser.close()
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
@@ -136,6 +120,7 @@ def create_image_file(content, form="png"):
 		img.save(image_name)
 		return image_name
 	except Exception as e:
+		print(str(e))
 		return None
 
 
@@ -159,6 +144,7 @@ def unsplash(endpoint):
 		media = api.media_upload(image_name)
 		api.update_status(status=description, media_ids=[media.media_id])
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
@@ -192,18 +178,16 @@ def metmuseum(endpoint):
 			tweet_text = "title: {0}\ndepartment: {1}\ndate: {2}\nImage not available".format(title, department, date)
 			api.update_status(status=tweet_text)
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
 def everydaypower(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
+		resp = requests.get(endpoint)
 
 		# get all paragraphs in the container
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		paragraph_list = soup.find('div', attrs={'id': 'mvp-content-main'}).find_all('p')
 
 		# get all quotes (i.e. the paragraph that have a number at the beginning)
@@ -223,7 +207,6 @@ def everydaypower(endpoint):
 			quote = quote[:275] + "..."
 
 		api.update_status(quote)
-		browser.close()
 	except Exception as e:
 		print(str(e))
 		return str(e)
@@ -231,13 +214,9 @@ def everydaypower(endpoint):
 
 def brainyquote(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
-
 		# get all paragrams where the quotes are
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		resp = requests.get(endpoint)
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		paragraph_list = soup.find_all('div', attrs={'class': 'clearfix'})
 		
 		# get actual quotes and remove white spaces
@@ -245,20 +224,16 @@ def brainyquote(endpoint):
 		quote = random.choice(quote_list)
 
 		api.update_status(quote)
-		browser.close()
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
 def letsgetsciencey(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
-		
 		# get all cards where facts are kept, then get the list of facts
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		resp = requests.get(endpoint)
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		paragraph_list = soup.find('div', attrs={'class': "et_builder_inner_content"}).find_all('div', attrs={'class': 'article-fact'})
 		fact_list = [x.find('p').text for x in paragraph_list]
 
@@ -272,7 +247,6 @@ def letsgetsciencey(endpoint):
 			fact = "{0}...\n{1}".format(fact, info)
 
 		api.update_status(fact)
-		browser.close()
 	except Exception as e:
 		print(str(e))
 		return str(e)
@@ -295,17 +269,14 @@ def nasa(endpoint):
 
 		api.update_status(status = text, media_ids=[media.media_id])
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
 def thefactsite(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
-
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		resp = requests.get(endpoint)
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		elements = soup.find('div', attrs={'class': "entry-content"}).find_all(re.compile('^[hp]'))
 		elements = elements[8:]
 		elements = [x for x in elements if len(x.text) > 0]
@@ -327,25 +298,23 @@ def thefactsite(endpoint):
 			fact = fact[:275] + "..."
 
 		api.update_status(fact)
-		browser.close()
 	except Exception as e:
+		print(str(e))
 		return str(e)
 
 
 def orleansmarketing(endpoint):
 	try:
-		opts = Options()
-		opts.headless = True
-		browser = Chrome(executable_path=DRIVER_PATH, options = opts)
-		browser.get(endpoint)
+		resp = requests.get(endpoint)
 
-		soup = BeautifulSoup(browser.page_source, 'html.parser')
+		soup = BeautifulSoup(resp.content, 'html.parser')
 		elements = soup.find('ol').find_all('li')
 
 		fact_list = [x.text for x in elements]
 		fact = random.choice(fact_list)
 
 		api.update_status(fact)
-		browser.close()
+
 	except Exception as e:
+		print(str(e))
 		return str(e)
