@@ -1,11 +1,10 @@
 import tweepy
 import random
-from selenium.webdriver import Chrome
-from selenium.webdriver.chrome.options import Options
 import requests
 from constants import *
 import contentHandler
 from bs4 import BeautifulSoup
+from time import sleep
 
 auth_handler = tweepy.OAuthHandler(API_KEY, SEC_KEY)
 auth_handler.set_access_token(TOKEN, SEC_TOKEN)
@@ -67,8 +66,7 @@ class TwitterBot:
 
 	def tweet_content(self, topic):
 		#choose between the 2 resources
-		#choice = random.choice(self.content_resources[topic])
-		choice = {"poetrydb": "http://poetrydb.org/random"}
+		choice = random.choice(self.content_resources[topic])
 		#get resource key as string
 		resource = [x for x in choice][0]
 		endpoint = choice[resource]
@@ -121,5 +119,8 @@ class TwitterBot:
 
 if __name__ == '__main__':
 	tb = TwitterBot()
-	tb.tweet()
+	delay = 60 * 60 * 4
+	while True:
+		tb.tweet()
+		sleep(delay)
 
