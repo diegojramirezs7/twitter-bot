@@ -1,9 +1,9 @@
 ## Twitter Bot that publishes different kind of content every time
 This is a bot that tweets some smart content at a scheduled time period.
-It can tweets about tech, science, poetry, some jokes and cool nasa and art images.
+It can tweet about tech, science, poetry, some jokes and cool astronomy and art images.
 
 The program gets the content from different websites and APIs.
-- When the content is obtained from websites, it's scraped using BeautifulSoup. In addition to other string manipulation from Python. 
+- When the content is obtained from websites, it's scraped using BeautifulSoup and other Pythonic string manipulation techniques.
 - The content from APIs is obtained in JSON format with Python's requests library. 
 - The twitter API is used through the Python API wrapper Tweepy. 
 - It can successfully:
